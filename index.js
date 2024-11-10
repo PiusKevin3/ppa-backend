@@ -1,52 +1,29 @@
 const express = require('express');
+const textGenerator = require('./textGenerator');
 const axios = require('axios');
 const dotenv = require('dotenv');
 
-dotenv.config(); // Load environment variables from .env file
+dotenv.config();
 
 const app = express();
-const port = 3000; // or your preferred port
+app.use(express.json());
+const port = 3000;
 
-const geminiApiKey = process.env.GEMINI_API_KEY; // Access API key from environment variable
-
-app.post('/summarize', async (req, res) => {
+app.post('/generate', async (req, res) => {
   try {
-    const { url } = req.body;
+    const { text } = req.body;
 
-    if (!url) {
-      return res.status(400).json({ error: 'URL is required' });
+    if (!text) {
+      return res.status(400).json({ error: 'Text is required' });
     }
 
-    const response = await fetch(url);
-    const text = await response.text();
+    const result = await textGenerator.textGenTextOnlyPromptStreaming(text);
+    
+    res.json({ text: result });
 
-    const summaryResponse = await axios.post(
-      'https://api.geminiai.com/v1/summarize',
-      {
-        text,
-        max_tokens: 100,
-        temperature: 0.5,
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${geminiApiKey}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-
-    const summary = summaryResponse.data.summary;
-
-    // Split summary into sentences
-    const sentences = summary.split('.').filter(sentence => sentence.trim() !== '');
-
-    // Extract first 5 sentences or less
-    const shortSummary = sentences.slice(0, 5).join('. ');
-
-    res.json({ summary: shortSummary });
   } catch (error) {
-    console.error(`Error summarizing privacy policy: ${error}`);
-    res.status(500).json({ error: 'Failed to summarize privacy policy' });
+    console.error(`Error generating text: ${error}`);
+    res.status(500).json({ error: 'Failed to generate text' });
   }
 });
 
