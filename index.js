@@ -39,7 +39,6 @@ app.post('/generate', async (req, res) => {
   }
 });
 
-app.listen(port, '0.0.0.0', () => {
-  console.log(`Server listening at http://0.0.0.0:${port}`);
+app.listen(port, () => {
+  console.log(`Server listening on ${port}`);
 });
-
